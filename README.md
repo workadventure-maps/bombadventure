@@ -46,4 +46,9 @@ make test        # headless gameplay tests on the snes9x core
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE), except:
+
+- `assets/woka/`: not MIT. Pipoya's sprites are under
+  [Pipoya's terms of use](https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32); the rest is
+  WorkAdventure's art. The ROM includes them, as the player sprites.
+- `assets/font.bmp`: zlib, see `assets/font.LICENSE.txt`.

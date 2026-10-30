@@ -17,7 +17,7 @@ Built as the free demo ROM for the WorkAdventure arcade cabinet
 | Art rights | WorkAdventure's numbered `character_*N.png` layers only (a mix of Pipoya sprites and WorkAdventure's own art). The six community-contributed layers (black and white hoodie, pride shirt, mate bottle, tinfoil hat, engelbert, mask) are left out. |
 | Power-ups | Extra bomb, bigger blast, speed. |
 | Sound | Placeholder sound effects (bomb drop, explosion, power-up, death). No music yet. |
-| License | MIT, code and ROM. |
+| License | MIT, except the Woka layers (Pipoya's terms and WorkAdventure's art) and the font (zlib): see README. |
 
 ## Prototype milestone
 
