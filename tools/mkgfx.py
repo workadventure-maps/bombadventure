@@ -15,20 +15,20 @@ from PIL import Image, ImageDraw
 ASSETS, OUT = sys.argv[1], sys.argv[2]
 KEY = (255, 0, 255)  # index 0, transparent
 
-# --- Players: WorkAdventure custom Woka layers, drawn bottom to top --------------------------------
+# --- Players: WorkAdventure Woka layers (body, eyes, outfit, hair), drawn bottom to top -------------
 PLAYERS = [
-    dict(color=3, eyes=1, clothes=9, hairs=47),     # P1 white shirt, red tie
-    dict(color=28, eyes=2, clothes=35, hairs=17),   # P2 red top
-    dict(color=9, eyes=4, clothes=30, hairs=69),    # P3 green dress
-    dict(color=7, eyes=8, clothes=28, hairs=52),    # P4 blue jacket
+    ('Character_bodye', 'Character_eye1', 'Character_outfit4b', 'character_hair18c'),  # P1 white shirt, red tie
+    ('Character_bodyb', 'Character_eye1', 'Character_outfit25', 'character_hair33b'),  # P2 pink top, ginger
+    ('Character_bodyh', 'Character_eye1', 'Character_outfit2', 'character_hair28d'),   # P3 green jacket
+    ('Character_bodyd', 'Character_eye1', 'Character_outfit5a', 'character_hair19a'),  # P4 blue suit
 ]
 WOKA = 21  # 2/3 of the 32px Woka frame
 
 
 def woka_frame(p, row, col):
     im = Image.new('RGBA', (32, 32))
-    for layer in ('color', 'eyes', 'clothes', 'hairs'):
-        sheet = Image.open(os.path.join(ASSETS, 'woka', f'character_{layer}{p[layer]}.png')).convert('RGBA')
+    for layer in p:
+        sheet = Image.open(os.path.join(ASSETS, 'woka', f'{layer}.png')).convert('RGBA')
         im.alpha_composite(sheet.crop((col * 32, row * 32, col * 32 + 32, row * 32 + 32)))
     return im
 

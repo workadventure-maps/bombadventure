@@ -38,17 +38,10 @@ make test        # headless gameplay tests on the snes9x core
 
 ## Credits
 
-- Characters: WorkAdventure Woka layers (`assets/woka/`), a mix of
-  [Pipoya](https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32)'s free RPG character sprites and art made
-  by WorkAdventure.
+- Characters: Woka parts designed by the WorkAdventure team (`assets/woka/`), © WorkAdventu.re, MIT.
 - Font: PVSnesLib example font by Alekmaul, zlib license, see `assets/font.LICENSE.txt`.
 - Built with [PVSnesLib](https://github.com/alekmaul/pvsneslib).
 
 ## License
 
-MIT, see [LICENSE](LICENSE), except:
-
-- `assets/woka/`: not MIT. Pipoya's sprites are under
-  [Pipoya's terms of use](https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32); the rest is
-  WorkAdventure's art. The ROM includes them, as the player sprites.
-- `assets/font.bmp`: zlib, see `assets/font.LICENSE.txt`.
+MIT, see [LICENSE](LICENSE).
