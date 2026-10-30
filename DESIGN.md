@@ -37,8 +37,11 @@ One arena, 1 to 4 players, bombs with chain reactions, breakable desks, the 3 po
   maps, works out the transfers during the frame (`prepare_vblank`) and only starts DMAs in VBlank: at most
   6 arena rows, 8 text rows and 2 sprite frames per frame. A full arena redraw takes 3 frames. The ROM records
   the scanline where VBlank work ends (`vbl_end`, `vbl_late`); busiest frame seen: 23 of 37 lines.
-- **Frame budget.** Code from 816-tcc is about 5x slower than hand-written assembly, so the per-cell work
-  (drawing, blasts, flame and desk timers) is in `src/cells.asm`. Cell changes take effect at once but are drawn
+- **Frame budget.** The per-cell work (drawing, blasts, flame and desk timers) is in `src/cells.asm`, for
+  headroom rather than necessity: measured over three random 4-player battles at full power, the same routines
+  in plain C never dropped a frame, but the busiest frames used 201-229 scanlines against 152-164 in assembly
+  (average cost only ~5% higher). 816-tcc spends about 10 instructions on every array access, so tuning the C
+  barely helps. Cell changes take effect at once but are drawn
   through a queue, 8 cells per frame, so a big blast spreads over a few frames. At most one bomb explodes per
   frame (chains ripple one bomb per frame), and a sound only starts on a frame without an explosion (starting
   one costs ~40 scanlines; streaming costs ~13 per frame). Busiest frame with 4 players at full power: about
