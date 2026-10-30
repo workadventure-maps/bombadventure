@@ -27,6 +27,7 @@ class Game(Snes):
 
 
 C_FLOOR, C_WALL, C_BURN, C_BOMB, C_PU_BOMB, C_PU_FIRE, C_PU_SPEED = 0, 1, 3, 4, 6, 7, 8
+MT_FL_C, MT_FL_H = 6, 7
 
 
 def cell(cx, cy):
@@ -74,6 +75,26 @@ def chain_reaction():
     g.run(BOMB_TIME - 86 + 3)               # A goes off, B follows a frame later
     assert g.peek('nbombs') == 0, 'bomb B did not chain'
     assert g.peek('alive') == 1
+
+
+def bombs_in_a_row():
+    # bombs on (3,3), range 2, and (7,3), range 4: their arms overlap on (4,3)..(6,3)
+    g = solo_round()
+    for cx in range(1, 10):
+        g.poke('cell', [C_FLOOR], cell(cx, 3))
+    a, b = cell(3, 3), cell(7, 3)
+    g.poke('cell', [C_BOMB], a)
+    g.poke('cell', [C_BOMB], b)
+    g.poke('bomb_cell', [a, b])
+    g.poke('bomb_time', [5, 10])
+    g.poke('bomb_owner', [0, 0])
+    g.poke('bomb_range', [2, 4])
+    g.poke('nbombs', [2])
+    g.run(15)
+    assert g.peek('nbombs') == 0
+    # (3,3): center + tip = center; (4,3): two middles; (5,3): tip + middle; (6,3): only (7,3)'s arm
+    pieces = g.peek('cpiece', 208)[cell(3, 3):cell(8, 3)]
+    assert pieces == [MT_FL_C, MT_FL_H, MT_FL_H, MT_FL_H, MT_FL_C], pieces
 
 
 def round_with_four_players():
@@ -258,6 +279,7 @@ if __name__ == '__main__':
     power_ups()
     sound()
     chain_reaction()
+    bombs_in_a_row()
     sudden_death()
     idle_cabinet_returns_to_title()
     random_battle()

@@ -35,6 +35,9 @@ blast_mid:
     .db 7, 7, 8, 8          ; MT_FL_H, MT_FL_V
 blast_end:
     .db 9, 10, 11, 12       ; MT_FL_L, R, U, D
+; line of each flame piece, from MT_FL_C: 0 center, 1 horizontal (H, L, R), 2 vertical (V, U, D)
+flame_axis:
+    .db 0, 1, 2, 1, 1, 2, 2
 
 ;---------------------------------------------------------------------------------
 ; void put_mt(u8 c, u8 mt): write metatile mt into bgmap at cell c, mark its row dirty
@@ -261,21 +264,47 @@ start_timer:
     rtl
 
 ;---------------------------------------------------------------------------------
-; void flame(u8 c, u8 mt): put a flame on cell c (crossing flames become a center piece)
+; void flame(u8 c, u8 mt): put a flame on cell c. Over another flame, pieces on the same line
+; merge into the middle piece of that line (two bombs in a row); crossing ones become a center piece.
 flame:
     php
     rep #$30
     lda 5,s
     and #$00FF
-    tax
+    tax                     ; x = c
     sep #$20
+    lda 6,s
+    sta.b tcc__r0           ; the new piece
     lda.w cell,x
     cmp #C_FLAME
     bne @own
+    lda.w cpiece,x
+    cmp.b tcc__r0
+    beq @own                ; same piece
+    phx
+    rep #$20
+    and #$00FF
+    tax
+    sep #$20
+    lda.l flame_axis-MT_FL_C,x
+    sta.b tcc__r1           ; line of the old piece
+    lda.b tcc__r0
+    rep #$20
+    and #$00FF
+    tax
+    sep #$20
+    lda.l flame_axis-MT_FL_C,x
+    plx
+    cmp.b tcc__r1
+    bne @cross
+    clc                     ; same line: MT_FL_C + 1 = MT_FL_H, MT_FL_C + 2 = MT_FL_V
+    adc #MT_FL_C
+    bra @piece
+@cross:
     lda #MT_FL_C
     bra @piece
 @own:
-    lda 6,s
+    lda.b tcc__r0
 @piece:
     sta.w cpiece,x
     lda #C_FLAME
