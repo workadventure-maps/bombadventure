@@ -14,7 +14,7 @@ Built as the free demo ROM for the WorkAdventure arcade cabinet
 | Match | Endless rounds, win counter per player, 2-minute round timer, then sudden death: walls drop in a spiral from the edge, one every 10 frames, crushing whoever is under them, until the arena is full (19 seconds), so every round ends with a winner or a draw. No saves: every boot is a fresh start. |
 | Arena | 16px cells, 13x11 playfield inside a wall border. Office theme: pillars are walls, desks are breakable. |
 | Characters | WorkAdventure custom-layer Wokas (body, eyes, hair, clothes), composited at build time, scaled to 2/3 (21x21), 15 colors each. Feet in the cell, head overlapping the row above. |
-| Art rights | David Perez's 2020 layers (owned by TheCodingMachine) only: the numbered `character_*N.png` files. The six community-contributed layers (black and white hoodie, pride shirt, mate bottle, tinfoil hat, engelbert, mask) are left out. |
+| Art rights | WorkAdventure's numbered `character_*N.png` layers only (a mix of Pipoya sprites and WorkAdventure's own art). The six community-contributed layers (black and white hoodie, pride shirt, mate bottle, tinfoil hat, engelbert, mask) are left out. |
 | Power-ups | Extra bomb, bigger blast, speed. |
 | Sound | Placeholder sound effects (bomb drop, explosion, power-up, death). No music yet. |
 | License | MIT, code and ROM. |

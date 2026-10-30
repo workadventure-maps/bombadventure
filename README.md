@@ -38,9 +38,9 @@ make test        # headless gameplay tests on the snes9x core
 
 ## Credits
 
-- Characters: WorkAdventure Woka layers by David Perez, © TheCodingMachine, released here under MIT.
-- Title screen art (`assets/title_bg.png`, `assets/title_logo.png`): generated with OpenAI's image generation
-  through Codex, 2026-10-30.
+- Characters: WorkAdventure Woka layers (`assets/woka/`), a mix of
+  [Pipoya](https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32)'s free RPG character sprites and art made
+  by WorkAdventure.
 - Font: PVSnesLib example font by Alekmaul, zlib license, see `assets/font.LICENSE.txt`.
 - Built with [PVSnesLib](https://github.com/alekmaul/pvsneslib).
 
