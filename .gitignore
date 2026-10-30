@@ -19,3 +19,6 @@ src/main.asm
 
 # python
 __pycache__/
+
+# GitHub Pages output
+_site/

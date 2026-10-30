@@ -5,6 +5,8 @@ made as the free demo ROM for the WorkAdventure arcade cabinet. See [DESIGN.md](
 
 ## Play
 
+In your browser: https://workadventure-maps.github.io/bombadventure/ (built from `main` by GitHub Actions).
+
 - Press **Start** to join. Players 2 to 4 need a Multitap in port 2 (snes9x: set port 2 to "Multitap").
 - **D-pad** to walk, **A / B / X / Y** to drop a bomb.
 - Last one standing wins the round. After 2 minutes, sudden death: walls close in until one player is left.
@@ -35,6 +37,8 @@ make test        # headless gameplay tests on the snes9x core
 | `tools/mksfx.py` | synthesizes the placeholder sound effects |
 | `tools/snes.py` | small headless libretro frontend: scripted input, Multitap, screenshots, RAM/VRAM reads |
 | `tests/smoke.py` | gameplay tests, including VBlank and frame-time budgets |
+| `web/index.html` | the GitHub Pages page: plays the ROM with [EmulatorJS](https://emulatorjs.org), Multitap on port 2 (`make site`) |
+| `.github/workflows/build.yml` | builds and tests every push; publishes the page and the ROM from `main` |
 
 ## Credits
 

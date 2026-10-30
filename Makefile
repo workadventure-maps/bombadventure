@@ -9,7 +9,7 @@ export FASTROM := 1
 
 include ${PVSNESLIB_HOME}/devkitsnes/snes_rules
 
-.PHONY: all gfx test
+.PHONY: all gfx test site
 
 all: gfx $(ROMNAME).sfc
 
@@ -52,3 +52,10 @@ data.obj: $(GFX_PIC) $(SFX_BRR)
 
 test: all
 	python3 tests/smoke.py
+
+# the GitHub Pages site: web player, ROM and title picture
+site: all
+	mkdir -p _site
+	cp web/index.html _site/
+	cp $(ROMNAME).sfc _site/
+	cp gfx/title_preview.png _site/title.png
