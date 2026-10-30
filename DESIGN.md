@@ -11,7 +11,7 @@ Built as the free demo ROM for the WorkAdventure arcade cabinet
 | Platform | SNES (LoROM), C with PVSnesLib. Must run on snes9x (cloud-game) and on accurate emulators (Mesen 2, bsnes). |
 | Players | 1 to 4. P1 on port 1, P2 to P4 through a Multitap on port 2. |
 | Drop-in | Press Start to join the next round. Empty slots stay empty. A lone player can walk around and blow up desks. |
-| Match | Endless rounds, win counter per player, 2-minute round timer. No saves: every boot is a fresh start. |
+| Match | Endless rounds, win counter per player, 2-minute round timer, then sudden death: walls drop in a spiral from the edge, one every 10 frames, crushing whoever is under them, until the arena is full (19 seconds), so every round ends with a winner or a draw. No saves: every boot is a fresh start. |
 | Arena | 16px cells, 13x11 playfield inside a wall border. Office theme: pillars are walls, desks are breakable. |
 | Characters | WorkAdventure custom-layer Wokas (body, eyes, hair, clothes), composited at build time, scaled to 2/3 (21x21), 15 colors each. Feet in the cell, head overlapping the row above. |
 | Art rights | David Perez's 2020 layers (owned by TheCodingMachine) only: the numbered `character_*N.png` files. The six community-contributed layers (black and white hoodie, pride shirt, mate bottle, tinfoil hat, engelbert, mask) are left out. |
@@ -43,6 +43,11 @@ One arena, 1 to 4 players, bombs with chain reactions, breakable desks, the 3 po
   frame (chains ripple one bomb per frame), and a sound only starts on a frame without an explosion (starting
   one costs ~40 scanlines; streaming costs ~13 per frame). Busiest frame with 4 players at full power: about
   160 of ~240 scanlines. `tests/smoke.py` fails above 200.
+- **Sudden death** walls drop on cells from a fixed spiral table (`spiral` in main.c, pillars skipped). A wall
+  takes away any bomb under it, and a flame or desk timer that runs out under a wall leaves the wall. Players
+  can't walk into a closed cell once they are past the middle of theirs, so a wall that lands under a
+  player's edge is solid. The "SUDDEN DEATH!" text is drawn between two drops: text plus a drop plus
+  starting the drop sound came to 199 scanlines.
 - **Lag at round changes.** Building a new arena takes about 7 frames, while the result screen is showing.
 - **Sound** streams BRR samples from ROM (PVSnesLib sound table, no music module). One effect at a time.
 - **Testing** runs on the snes9x libretro core (what cloud-game runs). Mesen 2.1.1 crashed on this machine

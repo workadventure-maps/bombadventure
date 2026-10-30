@@ -67,6 +67,7 @@ extern char title_til, title_tilend, title_map, title_pal;
 #define ROUND_SECONDS 120
 #define MAXBOMBS 32
 #define MAXTIMED 96
+#define DROP_FRAMES 10 // sudden death: one wall every 10 frames, 19 seconds to fill the arena
 
 // game states
 #define ST_TITLE 0
@@ -102,6 +103,17 @@ const u8 title_x[4] = {40, 88, 136, 184};
 #define TITLE_Y 146
 #define TITLE_LABEL_ROW 23
 #define TITLE_PROMPT_ROW 25
+// sudden death: every cell but the pillars, ring by ring from the edge, clockwise from the top-left
+#define SPIRAL_CELLS 113
+const u8 spiral[SPIRAL_CELLS] = {
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 45, 61, 77,
+    93, 109, 125, 141, 157, 173, 189, 188, 187, 186, 185, 184, 183, 182, 181, 180,
+    179, 178, 177, 161, 145, 129, 113, 97, 81, 65, 49, 33, 35, 37, 39, 41,
+    43, 60, 92, 124, 156, 171, 169, 167, 165, 163, 146, 114, 82, 50, 51, 52,
+    53, 54, 55, 56, 57, 58, 59, 75, 91, 107, 123, 139, 155, 154, 153, 152,
+    151, 150, 149, 148, 147, 131, 115, 99, 83, 67, 69, 71, 73, 90, 122, 137,
+    135, 133, 116, 84, 85, 86, 87, 88, 89, 105, 121, 120, 119, 118, 117, 101,
+    103};
 
 // ---- State (RAM) ----------------------------------------------------------------------------
 u16 bgmap[1024];   // arena BG map
@@ -138,6 +150,7 @@ u8 npads;
 u8 state;
 u16 state_timer;
 u8 seconds, subsec;
+u8 sd_next, sd_wait; // sudden death: walls dropped so far, frames to the next one
 u8 seeded;
 char buf[16];
 
@@ -315,15 +328,20 @@ void build_arena(void)
 }
 
 // ---- Bombs and flames -----------------------------------------------------------------------
-void explode(u8 b)
+void remove_bomb(u8 b)
 {
-    u8 c = bomb_cell[b], r = bomb_range[b];
     bombsout[bomb_owner[b]]--;
     nbombs--;
     bomb_cell[b] = bomb_cell[nbombs];
     bomb_time[b] = bomb_time[nbombs];
     bomb_owner[b] = bomb_owner[nbombs];
     bomb_range[b] = bomb_range[nbombs];
+}
+
+void explode(u8 b)
+{
+    u8 c = bomb_cell[b], r = bomb_range[b];
+    remove_bomb(b);
     flame(c, MT_FL_C);
     blast(c, r);
     sfx(SFX_BOOM);
@@ -387,7 +405,9 @@ u8 step(u8 p, u8 d)
             py[p] = y < ay ? y + 1 : y - 1;
             return 1;
         }
-        if (x == ax && !open(target))
+        // past the middle of the cell toward a closed one: stop (bombs and walls that appear under a
+        // player's edge are solid too)
+        if ((d ? x >= ax : x <= ax) && !open(target))
             return 0;
         px[p] = d ? x + 1 : x - 1;
     }
@@ -400,7 +420,7 @@ u8 step(u8 p, u8 d)
             px[p] = x < ax ? x + 1 : x - 1;
             return 1;
         }
-        if (y == ay && !open(target))
+        if ((d == 3 ? y >= ay : y <= ay) && !open(target))
             return 0;
         py[p] = d == 3 ? y + 1 : y - 1;
     }
@@ -443,7 +463,7 @@ void update_player(u8 p)
 
     c = center_cell(p);
     t = cell[c];
-    if (t == C_FLAME)
+    if (t == C_FLAME || t == C_WALL) // burnt, or crushed by a sudden-death wall
     {
         alive[p] = 0;
         dying[p] = 60;
@@ -472,6 +492,27 @@ void update_player(u8 p)
         set_cell(c, C_BOMB);
         sfx(SFX_BOMB);
     }
+}
+
+// ---- Sudden death -----------------------------------------------------------------------------
+// When the timer runs out, walls drop along the spiral until the arena is full, so every round
+// ends. A wall crushes whoever stands under it (update_player) and takes away any bomb there.
+void drop_wall(void)
+{
+    u8 c, b;
+    if (sd_next == SPIRAL_CELLS)
+        return;
+    c = spiral[sd_next++];
+    for (b = 0; b < nbombs; b++)
+    {
+        if (bomb_cell[b] == c)
+        {
+            remove_bomb(b);
+            break;
+        }
+    }
+    set_cell(c, C_WALL);
+    sfx(SFX_BOMB);
 }
 
 // ---- Sprites ----------------------------------------------------------------------------------
@@ -578,6 +619,8 @@ void new_round(void)
     }
     seconds = ROUND_SECONDS;
     subsec = 0;
+    sd_next = 0;
+    sd_wait = 0;
     state = ST_PLAY;
     clear_messages();
     draw_hud();
@@ -620,11 +663,11 @@ void show_result(void)
         center(13, 0, "WINS THE ROUND!");
     }
     else if (n == 1 && count(alive) == 1)
-        center(12, 0, seconds ? "NEW CHALLENGER!" : "TIME UP");
+        center(12, 0, "NEW CHALLENGER!");
     else if (n == 1)
         center(12, 0, "OUCH!");
     else
-        center(12, 0, seconds ? "DRAW" : "TIME UP - DRAW");
+        center(12, 0, "DRAW");
     // players who played and pressed something stay in; newcomers join
     for (p = 0; p < 4; p++)
     {
@@ -703,14 +746,31 @@ void update_game(void)
         {
             subsec = 0;
             if (seconds)
+            {
                 seconds--;
-            draw_timer();
+                draw_timer();
+            }
         }
         if (state == ST_PLAY)
         {
+            if (!seconds)
+            {
+                if (++sd_wait == DROP_FRAMES)
+                {
+                    sd_wait = 0;
+                    drop_wall();
+                }
+                else if (sd_wait == DROP_FRAMES / 2) // text is slow: not on the frame of a drop
+                {
+                    if (sd_next == 0)
+                        center(12, 0, "SUDDEN DEATH!");
+                    else if (sd_next == 12) // 2 seconds later
+                        clear_row(12);
+                }
+            }
             n = count(inround);
             // a lone player's round ends as soon as someone wants to join
-            if ((n > 1 && count(alive) <= 1) || (n == 1 && (count(alive) == 0 || count(ready))) || seconds == 0)
+            if ((n > 1 && count(alive) <= 1) || (n == 1 && (count(alive) == 0 || count(ready))))
             {
                 state = ST_ENDING;
                 state_timer = n == 1 && count(alive) ? 1 : 60;

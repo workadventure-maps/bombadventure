@@ -415,7 +415,7 @@ blast:
 
 ;---------------------------------------------------------------------------------
 ; void update_timed(void): tick flame and burning-desk timers. An expired flame leaves
-; floor; an expired desk leaves floor or, 3 times in 8, a power-up.
+; floor; an expired desk leaves floor or, 3 times in 8, a power-up; a wall stays.
 update_timed:
     php
     sep #$20
@@ -453,6 +453,8 @@ update_timed:
     sta.w timed,y
     plx
     lda.w cell,x
+    cmp #C_WALL             ; a sudden-death wall fell on it: it stays
+    beq @loop
     cmp #C_BURN
     bne @floor
     phx

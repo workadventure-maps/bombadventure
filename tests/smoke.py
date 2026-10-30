@@ -26,7 +26,7 @@ class Game(Snes):
         self.poke_wram(SYM[name] + offset, values)
 
 
-C_FLOOR, C_BOMB, C_PU_BOMB, C_PU_FIRE, C_PU_SPEED = 0, 4, 6, 7, 8
+C_FLOOR, C_WALL, C_BURN, C_BOMB, C_PU_BOMB, C_PU_FIRE, C_PU_SPEED = 0, 1, 3, 4, 6, 7, 8
 
 
 def cell(cx, cy):
@@ -134,6 +134,55 @@ def idle_player_is_dropped():
     assert g.peek('state') == PLAY and g.peek('inround', 4) == [1, 0, 0, 0]
 
 
+def sudden_death():
+    g = Game(ROM)
+    g.run(30)
+    g.press(0, 'start', frames=2)
+    g.press(1, 'start', frames=2)
+    g.run(200)
+    assert g.peek('state') == PLAY
+    lag0 = g.peek16('lag_frame_counter')
+    # a way for P1 from (1,1) to (3,3), out of the two outer rings; a desk burning on (5,1) for a while
+    for cx, cy in ((1, 2), (1, 3), (2, 3), (3, 3)):
+        g.poke('cell', [C_FLOOR], cell(cx, cy))
+    burn = cell(5, 1)
+    g.poke('cell', [C_BURN], burn)
+    g.poke('ctimer', [150], burn)
+    g.poke('timed', [burn], g.peek('ntimed'))
+    g.poke('ntimed', [g.peek('ntimed') + 1])
+
+    g.press(0, 'b', frames=2)               # bomb on (1,1), where the first wall falls
+    g.poke('seconds', [1])
+    g.poke('subsec', [59])                  # time is up next frame, first wall 10 frames later
+    g.press(0, 'down', frames=10)
+    g.run(2)
+    assert g.peek('cell', 32)[cell(1, 1)] == C_WALL
+    assert g.peek('nbombs') == 0 and g.peek('bombsout') == 0, 'the wall did not take the bomb'
+    y = g.peek16('py')
+    assert 16 < y < 32, y                   # P1's head still overlaps the new wall
+    g.press(0, 'up', frames=10)
+    assert g.peek16('py') == y and g.peek('alive') == 1, 'walked into the wall'
+
+    g.press(0, 'down', frames=48 - y)
+    g.press(0, 'right', frames=32)          # at (3,3), out of the two outer rings
+    assert (g.peek16('px'), g.peek16('py')) == (48, 48)
+    for _ in range(400):                    # P2 stays on (13,11), where the 23rd wall falls
+        if g.peek('state') != PLAY:
+            break
+        g.run(1)
+    assert g.peek('alive', 2) == [1, 0], g.peek('alive', 2)
+    assert g.peek('cell', 208)[burn] == C_WALL, 'the burnt desk turned the wall back into floor'
+    assert g.peek16('lag_frame_counter') == lag0, 'lag frames during sudden death'
+    for _ in range(10):                     # the last wall is still on its way to VRAM
+        if check_screen(g):
+            break
+        g.run(1)
+    else:
+        assert False, 'screen never settled'
+    g.run(70)
+    assert g.peek('state') == RESULT and g.peek('wins', 2) == [1, 0]
+
+
 def check_screen(g):
     """Once pending updates are flushed, the BG maps in VRAM must equal the game's RAM copies.
     A transfer that overran VBlank would leave stale tiles behind."""
@@ -172,9 +221,11 @@ def random_battle():
     recent = []
     checks = rounds = worst = 0
     for frame in range(1500):
-        if g.peek('state') == PLAY:  # everyone at full power: range 8, 5 bombs
+        if g.peek('state') == PLAY:  # everyone at full power: range 8, 5 bombs; sudden death after 3s
             g.poke('range', [8] * 4)
             g.poke('maxbombs', [5] * 4)
+            if g.peek('seconds') > 3:
+                g.poke('seconds', [3])
         if frame % 30 == 0:
             for p in range(4):
                 g.held[p] = {rng.choice(['up', 'down', 'left', 'right'])}
@@ -197,6 +248,7 @@ def random_battle():
     # the ROM counts frames where VBlank work ran into the visible picture
     assert g.peek16('vbl_late') == 0, g.peek16('vbl_late')
     assert worst < 200, f'busiest frame used {worst} scanlines'
+    print(f'random battle: {rounds} rounds, busiest frame {worst} scanlines')
 
 
 if __name__ == '__main__':
@@ -206,6 +258,7 @@ if __name__ == '__main__':
     power_ups()
     sound()
     chain_reaction()
+    sudden_death()
     idle_cabinet_returns_to_title()
     random_battle()
     print('ok')

@@ -7,7 +7,8 @@ made as the free demo ROM for the WorkAdventure arcade cabinet. See [DESIGN.md](
 
 - Press **Start** to join. Players 2 to 4 need a Multitap in port 2 (snes9x: set port 2 to "Multitap").
 - **D-pad** to walk, **A / B / X / Y** to drop a bomb.
-- Last one standing wins the round. Rounds loop forever; press Start to join the next one.
+- Last one standing wins the round. After 2 minutes, sudden death: walls close in until one player is left.
+  Rounds loop forever; press Start to join the next one.
   Players who don't touch their pad for a whole round are dropped.
 
 ## Build
