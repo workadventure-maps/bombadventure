@@ -13,7 +13,7 @@ Built as the free demo ROM for the WorkAdventure arcade cabinet
 | Drop-in | Press Start to join the next round. Empty slots stay empty. A lone player can walk around and blow up desks. |
 | Match | Endless rounds, win counter per player, 2-minute round timer, then sudden death: walls drop in a spiral from the edge, one every 10 frames, crushing whoever is under them, until the arena is full (19 seconds), so every round ends with a winner or a draw. No saves: every boot is a fresh start. |
 | Arena | 16px cells, 13x11 playfield inside a wall border. Office theme: pillars are walls, desks are breakable. |
-| Characters | WorkAdventure custom-layer Wokas (body, eyes, outfit, hair), composited at build time, scaled to 2/3 (21x21), 15 colors each. Feet in the cell, head overlapping the row above. |
+| Characters | WorkAdventure custom-layer Wokas (body, eyes, outfit, hair). In game at 2/3 size (21x21): hand-pixeled frames in `assets/sprites/` (drawn with Codex from the 32x32 Wokas; shrinking automatically made them blurry). Title screen: the Wokas composited at full size. 15 colors each, the hand-drawn frames' colors exactly. Feet in the cell, head overlapping the row above. |
 | Art rights | Only Woka parts designed and owned by WorkAdventure: the SaaS's `admin/public/wokas` pack. The older Woka layers mix in Pipoya's sprites, which can't be MIT, so they are not used. |
 | Power-ups | Extra bomb, bigger blast, speed. |
 | Sound | Placeholder sound effects (bomb drop, explosion, power-up, death). No music yet. |

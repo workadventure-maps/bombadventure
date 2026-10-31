@@ -22,7 +22,7 @@ PLAYERS = [
     ('Character_bodyh', 'Character_eye1', 'Character_outfit2', 'character_hair28d'),   # P3 green jacket
     ('Character_bodyd', 'Character_eye1', 'Character_outfit5a', 'character_hair19a'),  # P4 blue suit
 ]
-WOKA = 21  # 2/3 of the 32px Woka frame
+WOKA = 21  # in-game frames: 2/3 of the 32px Woka frame
 
 
 def woka_frame(p, row, col):
@@ -33,35 +33,39 @@ def woka_frame(p, row, col):
     return im
 
 
-def player_sheet(p):
+def player_sheet(n, p):
+    """In-game frames (2/3 size): hand-drawn 21x21 frames in assets/sprites/p<n>.png (63x84, same layout as a Woka
+    sheet: shrinking the Woka automatically blurs it). Title frames: the Woka at full size."""
+    small = Image.open(os.path.join(ASSETS, 'sprites', f'p{n}.png')).convert('RGBA')
     # Woka sheet rows are down, left, right, up; columns are step 1, stand, step 2
     frames = []
     for row in range(4):
         for col in range(3):
-            f = woka_frame(p, row, col).resize((WOKA, WOKA), Image.LANCZOS)
             cell = Image.new('RGBA', (32, 32))
-            cell.alpha_composite(f, ((32 - WOKA) // 2, 32 - WOKA - 1))  # feet one pixel above the bottom
+            cell.alpha_composite(small.crop((col * WOKA, row * WOKA, col * WOKA + WOKA, row * WOKA + WOKA)),
+                                 ((32 - WOKA) // 2, 32 - WOKA - 1))  # feet one pixel above the bottom
             frames.append(cell)
     for col in range(3):
         frames.append(woka_frame(p, 0, col))
     sheet = Image.new('RGBA', (32, 32 * len(frames)))
     for i, f in enumerate(frames):
         sheet.alpha_composite(f, (0, 32 * i))
-    return to_indexed(sheet, 15)
+    # the hand-picked colours are the palette, exactly; the title frames use the nearest of them
+    return to_indexed_with(sheet, sorted(set(c[:3] for c in small.get_flattened_data() if c[3])))
 
 
-def to_indexed(rgba, ncolors):
-    """Hard alpha, quantize the opaque pixels to ncolors, index 0 = transparent."""
-    alpha = rgba.getchannel('A').point(lambda v: 255 if v > 110 else 0)
-    q = rgba.convert('RGB').quantize(ncolors, method=Image.MEDIANCUT)
-    pal = q.getpalette()[:ncolors * 3]
+def to_indexed_with(rgba, colours):
+    """Hard alpha, every opaque pixel mapped to the nearest of the given colours (15 at most), index 0 = transparent."""
+    assert len(colours) <= 15, f'{len(colours)} colours, 15 max'
     out = Image.new('P', rgba.size, 0)
-    out.putpalette(list(KEY) + pal + [0] * (3 * (16 - 1 - ncolors)))
-    src, a, dst = q.load(), alpha.load(), out.load()
+    out.putpalette(list(KEY) + [v for c in colours for v in c])
+    src, dst = rgba.load(), out.load()
     for y in range(rgba.height):
         for x in range(rgba.width):
-            if a[x, y]:
-                dst[x, y] = src[x, y] + 1
+            r, g, b, a = src[x, y]
+            if a > 110:
+                dst[x, y] = 1 + min(range(len(colours)),
+                                    key=lambda i: (colours[i][0] - r) ** 2 + (colours[i][1] - g) ** 2 + (colours[i][2] - b) ** 2)
     return out
 
 
@@ -213,6 +217,6 @@ os.makedirs(OUT, exist_ok=True)
 tileset().save(os.path.join(OUT, 'tiles.png'))
 flames().save(os.path.join(OUT, 'flames.png'))
 font().save(os.path.join(OUT, 'font.png'))
-sheets = [player_sheet(p) for p in PLAYERS]
+sheets = [player_sheet(i + 1, p) for i, p in enumerate(PLAYERS)]
 for i, s in enumerate(sheets):
     s.save(os.path.join(OUT, f'p{i + 1}.png'))

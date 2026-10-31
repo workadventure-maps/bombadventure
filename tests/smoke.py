@@ -119,6 +119,32 @@ def flames_match_art():
         assert got.tobytes() == art.crop((16 * piece, 0, 16 * piece + 16, 16)).tobytes(), f'flame at ({cx},3)'
 
 
+def players_match_art():
+    # each player on screen is its hand-drawn frame from assets/sprites (exact colours, sprite palette per player)
+    import tempfile
+    from PIL import Image
+    g = Game(ROM)
+    g.run(30)
+    for p in range(4):
+        g.press(p, 'start', frames=2)
+    g.run(200)
+    assert g.peek('frame', 4) == [1, 1, 1, 1]   # everyone standing, facing down
+    with tempfile.NamedTemporaryFile(suffix='.png') as f:
+        g.screenshot(f.name)
+        screen = Image.open(f.name).convert('RGB').point(lambda v: v >> 3 << 3)
+    ram = g.wram()
+    for p in range(4):
+        x = ram[SYM['px'] + 2 * p] | ram[SYM['px'] + 2 * p + 1] << 8
+        y = ram[SYM['py'] + 2 * p] | ram[SYM['py'] + 2 * p + 1] << 8
+        art = Image.open(os.path.join(ROOT, 'assets', 'sprites', f'p{p + 1}.png')).convert('RGBA').crop((21, 0, 42, 21))
+        for ay in range(21):
+            for ax in range(21):
+                r, gg, b, a = art.getpixel((ax, ay))
+                if a:   # the 21x21 frame sits at (5, 10) in the 32x32 sprite
+                    assert screen.getpixel((x + 5 + ax, y + 10 + ay)) == (r >> 3 << 3, gg >> 3 << 3, b >> 3 << 3), \
+                        f'P{p + 1} pixel ({ax},{ay})'
+
+
 def round_with_four_players():
     g = Game(ROM)
     g.run(60)
@@ -303,6 +329,7 @@ if __name__ == '__main__':
     chain_reaction()
     bombs_in_a_row()
     flames_match_art()
+    players_match_art()
     sudden_death()
     idle_cabinet_returns_to_title()
     random_battle()

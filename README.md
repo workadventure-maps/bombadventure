@@ -32,7 +32,7 @@ make test        # headless gameplay tests on the snes9x core
 | `src/main.c` | game: rounds, players, bombs, HUD, VBlank transfers |
 | `src/cells.asm` | arena hot paths in 65816 assembly: drawing cells, blasts, timers |
 | `data.asm` | graphics and sound data included in the ROM |
-| `tools/mkgfx.py` | builds the tiles, font and player sprites from `assets/` |
+| `tools/mkgfx.py` | builds the tiles, flames, font and player sprites from `assets/` |
 | `tools/mktitle.py` | builds the title screen picture: background + logo, fitted into 6 SNES palettes |
 | `tools/mksfx.py` | synthesizes the placeholder sound effects |
 | `tools/snes.py` | small headless libretro frontend: scripted input, Multitap, screenshots, RAM/VRAM reads |
@@ -42,7 +42,8 @@ make test        # headless gameplay tests on the snes9x core
 
 ## Credits
 
-- Characters: Woka parts designed by the WorkAdventure team (`assets/woka/`), © WorkAdventu.re, MIT.
+- Characters: Woka parts designed by the WorkAdventure team (`assets/woka/`), redrawn at 21x21 for the game
+  (`assets/sprites/`), © WorkAdventu.re, MIT.
 - Font: PVSnesLib example font by Alekmaul, zlib license, see `assets/font.LICENSE.txt`.
 - Built with [PVSnesLib](https://github.com/alekmaul/pvsneslib).
 
