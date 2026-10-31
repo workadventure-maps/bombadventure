@@ -97,6 +97,28 @@ def bombs_in_a_row():
     assert pieces == [MT_FL_C, MT_FL_H, MT_FL_H, MT_FL_H, MT_FL_C], pieces
 
 
+def flames_match_art():
+    # the flame pieces on screen are the ones in assets/flames.png (own tiles, own palette)
+    import tempfile
+    from PIL import Image
+    g = solo_round()
+    for cx in range(1, 10):
+        g.poke('cell', [C_FLOOR], cell(cx, 3))
+    b = cell(5, 3)
+    g.poke('cell', [C_BOMB], b)
+    g.poke('bomb_cell', [b]); g.poke('bomb_time', [2]); g.poke('bomb_owner', [0]); g.poke('bomb_range', [2])
+    g.poke('nbombs', [1])
+    g.run(12)
+    with tempfile.NamedTemporaryFile(suffix='.png') as f:
+        g.screenshot(f.name)
+        screen = Image.open(f.name).convert('RGB').point(lambda v: v >> 3 << 3)
+    art = Image.open(os.path.join(ROOT, 'assets', 'flames.png')).convert('RGB').point(lambda v: v >> 3 << 3)
+    # cell (cx, cy) is at screen (8 + 16 cx, 15 + 16 cy): BG line 1 shows on the first visible line
+    for cx, piece in ((5, 0), (4, 1), (6, 1), (3, 3), (7, 4)):   # centre, H, H, end left, end right
+        got = screen.crop((8 + 16 * cx, 15 + 48, 24 + 16 * cx, 31 + 48))
+        assert got.tobytes() == art.crop((16 * piece, 0, 16 * piece + 16, 16)).tobytes(), f'flame at ({cx},3)'
+
+
 def round_with_four_players():
     g = Game(ROM)
     g.run(60)
@@ -280,6 +302,7 @@ if __name__ == '__main__':
     sound()
     chain_reaction()
     bombs_in_a_row()
+    flames_match_art()
     sudden_death()
     idle_cabinet_returns_to_title()
     random_battle()

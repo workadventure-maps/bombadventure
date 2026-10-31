@@ -33,6 +33,10 @@ One arena, 1 to 4 players, bombs with chain reactions, breakable desks, the 3 po
   address. Text keeps palettes 0-1 (BG3 2bpp), which is why text is on BG3. The Wokas are the game's own
   sprites at full 32x32 size (frames 12-14 of each sheet) and walk on the spot once their player joins. Title
   and arena share BG2, so switching reloads tiles, map and palettes with the screen off for a frame.
+- **Flames** are pixel art in `assets/flames.png`: 7 pieces (centre, horizontal and vertical middles, 4 ends),
+  drawn with Codex as a mix of two of its designs. The arena palette is full, so they have their own tiles,
+  loaded right after the arena's, and their own BG palette (3). `tests/smoke.py` checks that the pieces on screen
+  match the file.
 - **VBlank budget.** VRAM can only be written during VBlank (37 scanlines). The game keeps RAM copies of both
   maps, works out the transfers during the frame (`prepare_vblank`) and only starts DMAs in VBlank: at most
   6 arena rows, 8 text rows and 2 sprite frames per frame. A full arena redraw takes 3 frames. The ROM records

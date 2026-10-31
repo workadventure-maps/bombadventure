@@ -8,6 +8,12 @@ tiles_tilend:
 tiles_pal:
 .incbin "gfx/tiles.pal"
 
+flames_til:
+.incbin "gfx/flames.pic"
+flames_tilend:
+flames_pal:
+.incbin "gfx/flames.pal"
+
 font_til:
 .incbin "gfx/font.pic"
 font_tilend:

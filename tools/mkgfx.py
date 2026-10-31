@@ -106,30 +106,6 @@ def bomb(d, big):
     d.point((11, 9 - r - 3), fill=12)
 
 
-def flame_band(d, horizontal, start, end):
-    """Flame band across the tile between start..end along its axis."""
-    for width, color in ((5, 12), (3, 11), (1, 10)):
-        if horizontal:
-            d.rectangle((start, 8 - width, end, 7 + width), fill=color)
-        else:
-            d.rectangle((8 - width, start, 7 + width, end), fill=color)
-
-
-def flame_end(d, direction):
-    # the band comes from the center side and ends with a rounded tip
-    horizontal = direction in 'lr'
-    if direction in 'lu':
-        flame_band(d, horizontal, 5, 15)
-        tip = 5
-    else:
-        flame_band(d, horizontal, 0, 10)
-        tip = 10
-    for width, color in ((5, 12), (3, 11), (1, 10)):
-        r = width
-        box = (tip - r, 8 - r, tip + r - 1, 7 + r) if horizontal else (8 - r, tip - r, 7 + r, tip + r - 1)
-        d.ellipse(box, fill=color)
-
-
 def powerup(d, bg, icon):
     floor(d)
     d.rounded_rectangle((1, 1, 14, 14), radius=3, fill=bg, outline=1)
@@ -177,21 +153,8 @@ def tile(name):
         d.polygon([(4, 12), (6, 6), (8, 10), (10, 5), (12, 12)], fill=11)
     elif name in ('bomb0', 'bomb1'):
         bomb(d, name == 'bomb1')
-    elif name == 'fl_c':
-        floor(d)
-        flame_band(d, True, 0, 15)
-        flame_band(d, False, 0, 15)
-        d.ellipse((3, 3, 12, 12), fill=11)
-        d.ellipse((5, 5, 10, 10), fill=10)
-    elif name == 'fl_h':
-        floor(d)
-        flame_band(d, True, 0, 15)
-    elif name == 'fl_v':
-        floor(d)
-        flame_band(d, False, 0, 15)
     elif name.startswith('fl_'):
-        floor(d)
-        flame_end(d, name[3])
+        floor(d)  # unused slot: the flames come from assets/flames.png, see flames()
     elif name == 'pu_bomb':
         powerup(d, 9, 'bomb')
     elif name == 'pu_fire':
@@ -207,6 +170,23 @@ def tileset():
     for i, name in enumerate(TILES):
         im.paste(tile(name), ((i % 8) * 16, (i // 8) * 16))
     im.putpalette([c for rgb in PAL for c in rgb])
+    return im
+
+
+def flames():
+    """assets/flames.png: 7 pieces of 16x16 (centre, horizontal, vertical, end left, right, up, down), drawn
+    over the floor. They have their own colours, so their own tiles and BG palette: 8 pieces wide (the last
+    one unused) to keep the metatile layout of tiles.png."""
+    src = Image.open(os.path.join(ASSETS, 'flames.png')).convert('RGB')
+    colours = sorted(set(src.getpixel((x, y)) for x in range(src.width) for y in range(src.height)))
+    assert len(colours) <= 15, f'flames.png has {len(colours)} colours, 15 max'
+    index = {c: i + 1 for i, c in enumerate(colours)}  # index 0: the key colour, used nowhere
+    im = Image.new('P', (128, 16), 0)
+    px, sp = im.load(), src.load()
+    for y in range(16):
+        for x in range(src.width):
+            px[x, y] = index[sp[x, y]]
+    im.putpalette(list(KEY) + [v for c in colours for v in c])
     return im
 
 
@@ -231,6 +211,7 @@ def font():
 
 os.makedirs(OUT, exist_ok=True)
 tileset().save(os.path.join(OUT, 'tiles.png'))
+flames().save(os.path.join(OUT, 'flames.png'))
 font().save(os.path.join(OUT, 'font.png'))
 sheets = [player_sheet(p) for p in PLAYERS]
 for i, s in enumerate(sheets):

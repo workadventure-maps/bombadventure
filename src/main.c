@@ -5,6 +5,7 @@
 #include <snes.h>
 
 extern char tiles_til, tiles_tilend, tiles_pal;
+extern char flames_til, flames_tilend, flames_pal;
 extern char font_til, font_tilend, font_pal;
 extern char p1_til, p2_til, p3_til, p4_til;
 extern char p1_pal, p2_pal, p3_pal, p4_pal;
@@ -19,15 +20,16 @@ extern char title_til, title_tilend, title_map, title_pal;
 #define AW 15
 #define AH 13
 #define NCELLS 208
-// VRAM (words): sprites $0000-$1FFF, BG2 tiles $2000 (arena, or the title picture: up to 1024 tiles),
-// BG3 font $6000, BG3 text map $7000, BG2 map $7400. BG1 is unused.
-// CGRAM: BG3 text palettes 0..4 (4 colors each, colors 0..19), arena palette 2 or title palettes 2..7,
-// sprite palettes 8..11.
+// VRAM (words): sprites $0000-$1FFF, BG2 tiles $2000 (arena then flame tiles, or the title picture: up to
+// 1024 tiles), BG3 font $6000, BG3 text map $7000, BG2 map $7400. BG1 is unused.
+// CGRAM: BG3 text palettes 0..4 (4 colors each, colors 0..19), arena palettes 2 (tiles) and 3 (flames) or
+// title palettes 2..7, sprite palettes 8..11.
 #define VRAM_BG_TILES 0x2000
 #define VRAM_FONT 0x6000
 #define VRAM_TEXT_MAP 0x7000
 #define VRAM_ARENA_MAP 0x7400
 #define ARENA_ATTR 0x0800 // BG palette 2
+#define FLAME_ATTR 0x0C00 // BG palette 3: the flames have their own colors (assets/flames.png)
 #define TEXT_ATTR 0x2000  // high priority (on top of everything with BG3_MODE1_PRIORITY_HIGH), palette 0
 
 // cell types
@@ -585,7 +587,9 @@ void show_arena(void)
 {
     setScreenOff();
     dmaCopyVram(&tiles_til, VRAM_BG_TILES, &tiles_tilend - &tiles_til);
+    dmaCopyVram(&flames_til, VRAM_BG_TILES + ((&tiles_tilend - &tiles_til) >> 1), &flames_tilend - &flames_til);
     dmaCopyCGram(&tiles_pal, 32, 32);
+    dmaCopyCGram(&flames_pal, 48, 32);
     build_arena();
     dmaCopyVram((u8 *)bgmap, VRAM_ARENA_MAP, 2048);
     map_lo = map_hi = 255;
@@ -920,6 +924,9 @@ int main(void)
 
     for (i = 0; i < 18; i++)
         mt_tile[i] = ((i >> 3) << 5) + ((i & 7) << 1) + ARENA_ATTR;
+    // the flame pieces come from their own tiles, loaded right after the arena's (show_arena)
+    for (i = 0; i < 7; i++)
+        mt_tile[MT_FL_C + i] = ((&tiles_tilend - &tiles_til) >> 5) + (i << 1) + FLAME_ATTR;
     for (i = 0; i < 1024; i++)
     {
         bgmap[i] = mt_tile[MT_BLANK]; // around the arena: empty, the backdrop shows
